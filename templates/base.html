@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ current_user.theme if current_user.is_authenticated else 'dark' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}StudyTrack{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <div class="wrap">
+
+    {% if current_user.is_authenticated %}
+    <div class="top-row">
+      <div>
+        <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+        <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
+      </div>
+      <div class="btn-row">
+        {% if global_active_timer %}
+        <a href="{{ url_for('study_timer') }}" class="btn btn-green timer-pulse">
+          ⏱️ <span id="globalTimerClock">00:00:00</span> — {{ global_active_timer.subject_name }}
+        </a>
+        {% endif %}
+        {% block top_actions %}{% endblock %}
+        <a href="{{ url_for('profile') }}" class="btn btn-orange">👤 My Profile</a>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="{{ url_for('dashboard') }}" class="nav-btn dashboard {{ 'active' if request.endpoint == 'dashboard' }}">🏠 Dashboard</a>
+      <a href="{{ url_for('assignments') }}" class="nav-btn assignments {{ 'active' if request.endpoint in ['assignments','new_assignment','edit_assignment','assignments_calendar'] }}">📋 Assignments</a>
+      <a href="{{ url_for('subjects') }}" class="nav-btn subjects {{ 'active' if request.endpoint in ['subjects','new_subject','edit_subject','bulk_import_subjects'] }}">📘 Subjects</a>
+      <a href="{{ url_for('study_history') }}" class="nav-btn study-history {{ 'active' if request.endpoint in ['study_history','new_study_session','study_timer'] }}">⏱️ Study History</a>
+      <a href="{{ url_for('progress') }}" class="nav-btn progress {{ 'active' if request.endpoint == 'progress' }}">📈 Progress</a>
+    </nav>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-list">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+    {% if current_user.is_authenticated %}
+    <footer class="app-footer">StudyTrack — built for students who like to know exactly where their time goes.</footer>
+    {% endif %}
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% if global_active_timer %}
+  <script>
+    startLiveClock('globalTimerClock', {{ global_active_timer.started_at_iso|tojson }});
+  </script>
+  {% endif %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

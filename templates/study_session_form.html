@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Log Study Session — StudyTrack{% endblock %}
+{% block page_title %}Log Past Session{% endblock %}
+{% block page_subtitle %}Manual entry — already studied? Log it here{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:14px;">
+  <a href="{{ url_for('study_timer') }}" style="font-size:0.78rem; font-weight:700; text-decoration:underline;">← Use the live timer instead</a>
+</div>
+<div class="form-card">
+  <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="auth-field field">
+      <label>Subject</label>
+      <select name="subject_id" required>
+        {% for s in subjects %}
+        <option value="{{ s.id }}">{{ s.name }} ({{ s.category }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="auth-field field">
+      <label>Date</label>
+      <input type="date" name="session_date" value="{{ today.isoformat() }}" required>
+    </div>
+
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>Start Time</label>
+        <input type="time" name="start_time" required>
+      </div>
+      <div class="field">
+        <label>End Time</label>
+        <input type="time" name="end_time" required>
+      </div>
+    </div>
+
+    <div class="auth-field field">
+      <label>Effectiveness (1 - 5)</label>
+      <select name="effectiveness">
+        <option value="1">1 — Distracted</option>
+        <option value="2">2 — So-so</option>
+        <option value="3" selected>3 — Decent</option>
+        <option value="4">4 — Focused</option>
+        <option value="5">5 — Deep work</option>
+      </select>
+    </div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn btn-green">💾 Save Session</button>
+      <a href="{{ url_for('study_history') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

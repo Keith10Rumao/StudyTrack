@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block title %}Profile — StudyTrack{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Your academic identity{% endblock %}
+{% block top_actions %}
+<a href="{{ url_for('logout') }}" class="btn btn-orange">🚪 Logout</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="profile-header">
+  <div class="avatar-circle">{{ current_user.name[:1]|upper if current_user.name else '?' }}</div>
+  <div>
+    <p class="profile-name">{{ current_user.name or 'Unnamed Student' }}</p>
+    <div class="profile-tags">
+      <span class="badge badge-blue">{{ current_user.year_level }}</span>
+      {% if current_user.branch %}<span class="badge badge-green">{{ current_user.branch }}</span>{% endif %}
+      {% if current_user.university %}<span class="badge badge-purple">{{ current_user.university }}</span>{% endif %}
+    </div>
+    {% if current_user.bio %}<p class="profile-quote">"{{ current_user.bio }}"</p>{% endif %}
+  </div>
+</div>
+
+<div class="section-heading">Academic Snapshot</div>
+<div class="stat-grid">
+  <div class="stat-box sb-yellow">
+    <div class="label">⭐ Current GPA</div>
+    <div class="value">{{ current_user.gpa_current }} / 10</div>
+  </div>
+  <div class="stat-box sb-green">
+    <div class="label">📅 Attendance</div>
+    <div class="value">{{ current_user.attendance }}%</div>
+  </div>
+  <div class="stat-box sb-blue">
+    <div class="label">🕒 Study Hours</div>
+    <div class="value">{{ total_hours }}</div>
+  </div>
+  <div class="stat-box sb-pink">
+    <div class="label">📘 Subjects</div>
+    <div class="value">{{ subjects_count }}</div>
+  </div>
+</div>
+
+<div class="section-heading">Goals & Targets</div>
+<div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+  <div class="goal-box">
+    <div class="label">🎯 GPA Target</div>
+    <div class="value">{{ current_user.gpa_current }} / {{ current_user.gpa_target }}</div>
+    <div class="progress-track"><div class="progress-fill" style="width:{{ gpa_progress_pct }}%;"></div></div>
+    <div class="sub">{{ gpa_progress_pct }}% of target</div>
+  </div>
+  <div class="goal-box">
+    <div class="label">⚡ Weekly Study</div>
+    <div class="value">{{ week_hours }} / {{ current_user.weekly_study_target }} hrs</div>
+    <div class="progress-track"><div class="progress-fill green" style="width:{{ week_progress_pct }}%;"></div></div>
+    <div class="sub">{{ [current_user.weekly_study_target - week_hours, 0]|max }} hrs remaining this week</div>
+  </div>
+  <div class="milestone-box">
+    <div class="label">🚩 Next Milestone</div>
+    <div class="title">{{ current_user.next_milestone_title or 'Not set' }}</div>
+    {% if days_away is not none %}
+      <div class="days">{{ days_away }} day{{ 's' if days_away != 1 }} away</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="section-heading">Streaks & Achievements</div>
+<div class="field-grid" style="grid-template-columns: 1fr 1.4fr;">
+  <div class="streak-box">
+    <div style="font-size:2rem;">🔥</div>
+    <div>
+      <div class="num">{{ current_streak }}</div>
+      <div class="lbl">Day Streak</div>
+      <div class="longest">Longest: {{ longest_streak }} days</div>
+    </div>
+  </div>
+  <div class="badge-shelf">
+    {% for b in badges %}
+    <div class="badge-item {{ 'unlocked b' ~ loop.index0 if b.unlocked else 'locked' }}">
+      <div class="ic">{{ b.icon }}</div>
+      {{ b.name }}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="section-heading">Appearance</div>
+<div class="panel panel-dark">
+  <div class="panel-label">🎨 Theme</div>
+  <div class="theme-row">
+    <div class="theme-option">
+      <form method="POST" action="{{ url_for('set_theme', mode='dark') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-dark btn-block">🌙 Dark</button>
+      </form>
+      <div class="active-mark">{{ '● Active' if current_user.theme == 'dark' else '' }}</div>
+    </div>
+    <div class="theme-option">
+      <form method="POST" action="{{ url_for('set_theme', mode='light') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-outline btn-block">☀️ Light</button>
+      </form>
+      <div class="active-mark">{{ '● Active' if current_user.theme == 'light' else '' }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="section-heading">Change Password</div>
+<div class="panel panel-dark">
+  <form method="POST" action="{{ url_for('change_password') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>New Password</label>
+        <input type="password" name="new_password" placeholder="••••••••" required minlength="6">
+      </div>
+      <div class="field">
+        <label>Confirm New Password</label>
+        <input type="password" name="confirm_password" placeholder="••••••••" required minlength="6">
+      </div>
+    </div>
+    <div class="auth-field field">
+      <label>Current Password</label>
+      <input type="password" name="current_password" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="btn btn-blue">🔑 Change Password</button>
+  </form>
+</div>
+
+<div class="section-heading">Account Recovery</div>
+<div class="panel panel-dark">
+  <div class="panel-label">🔐 Security Question</div>
+  <p style="font-size:0.8rem; color:var(--text-dim); font-weight:600; margin:0 0 12px;">
+    Current question: <strong>{{ current_user.security_question or 'Not set' }}</strong>
+    — used to reset your password if you ever forget it.
+  </p>
+  <form method="POST" action="{{ url_for('update_security') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>New Security Question</label>
+        <input type="text" name="security_question" placeholder="e.g. What's the name of your first pet?">
+      </div>
+      <div class="field">
+        <label>New Answer</label>
+        <input type="text" name="security_answer" placeholder="Your answer">
+      </div>
+    </div>
+    <div class="auth-field field">
+      <label>Confirm with Current Password</label>
+      <input type="password" name="current_password" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="btn btn-purple">🔐 Update Security Question</button>
+  </form>
+</div>
+
+<div class="section-heading">Your Data</div>
+<div class="panel panel-dark">
+  <div class="panel-label">⬇️ Export Your Data</div>
+  <p style="font-size:0.8rem; color:var(--text-dim); font-weight:600; margin:0 0 12px;">
+    Download a JSON file of your subjects, assignments, study sessions, and profile
+    info — handy for backups or moving to another device. Your password and security
+    answer are never included.
+  </p>
+  <a href="{{ url_for('export_data') }}" class="btn btn-green">⬇️ Download My Data (.json)</a>
+</div>
+
+<div class="section-heading">Edit Profile</div>
+<div class="form-card" style="max-width:none;">
+  <form method="POST" action="{{ url_for('profile') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" name="name" value="{{ current_user.name }}">
+      </div>
+      <div class="field">
+        <label>Year Level</label>
+        <select name="year_level">
+          {% for y in year_levels %}
+          <option value="{{ y }}" {{ 'selected' if current_user.year_level == y }}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>Branch / Major</label>
+        <input type="text" name="branch" value="{{ current_user.branch }}">
+      </div>
+      <div class="field">
+        <label>University / College</label>
+        <input type="text" name="university" value="{{ current_user.university }}">
+      </div>
+    </div>
+
+    <div class="auth-field field">
+      <label>Profile Quote</label>
+      <input type="text" name="bio" value="{{ current_user.bio }}">
+    </div>
+
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>Current GPA</label>
+        <input type="number" step="0.1" min="0" max="10" name="gpa_current" value="{{ current_user.gpa_current }}">
+      </div>
+      <div class="field">
+        <label>GPA Target</label>
+        <input type="number" step="0.1" min="0" max="10" name="gpa_target" value="{{ current_user.gpa_target }}">
+      </div>
+    </div>
+
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>Attendance (%)</label>
+        <input type="number" step="0.1" min="0" max="100" name="attendance" value="{{ current_user.attendance }}">
+      </div>
+      <div class="field">
+        <label>Weekly Study Target (hrs)</label>
+        <input type="number" step="0.5" min="0" name="weekly_study_target" value="{{ current_user.weekly_study_target }}">
+      </div>
+    </div>
+
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>Next Milestone Title</label>
+        <input type="text" name="next_milestone_title" placeholder="e.g. Engineering Maths II Exam" value="{{ current_user.next_milestone_title }}">
+      </div>
+      <div class="field">
+        <label>Next Milestone Date</label>
+        <input type="date" name="next_milestone_date" value="{{ current_user.next_milestone_date.isoformat() if current_user.next_milestone_date else '' }}">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-green">💾 Save Profile</button>
+  </form>
+</div>
+
+<div class="section-heading">Danger Zone</div>
+<div class="danger-zone">
+  <div class="panel-label" style="color:var(--c-red);">🗑️ Delete Account</div>
+  <p style="font-size:0.8rem; color:var(--text-dim); font-weight:600; margin:0 0 12px;">
+    This permanently deletes your account, all subjects, assignments, study sessions,
+    and uploaded notes. This cannot be undone — consider exporting your data first.
+  </p>
+  <form method="POST" action="{{ url_for('delete_account') }}"
+        onsubmit="return confirmDelete('This will permanently delete your account and ALL your data. Are you absolutely sure?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="auth-field field" style="max-width:320px;">
+      <label>Confirm with Current Password</label>
+      <input type="password" name="current_password" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="btn btn-red">🗑️ Delete My Account Permanently</button>
+  </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Bulk Import Subjects — StudyTrack{% endblock %}
+{% block page_title %}Bulk Import{% endblock %}
+{% block page_subtitle %}Add many subjects at once{% endblock %}
+
+{% block content %}
+<div class="form-card" style="max-width:680px;">
+  <div class="panel panel-yellow" style="margin-bottom:18px;">
+    <div class="panel-label">ℹ️ Format</div>
+    <div style="font-size:0.82rem; font-weight:600; line-height:1.6;">
+      One subject per line, comma-separated:<br>
+      <code>Name, Category, Credits, Year Level</code><br>
+      Example: <code>Engineering Physics, CORE, 3, 1st Year</code><br>
+      Only the name is required — the rest default to CORE / 0 credits / 1st Year.
+    </div>
+  </div>
+
+  <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="auth-field field">
+      <label>Paste your subject list</label>
+      <textarea name="bulk_data" rows="10" placeholder="Engineering Chemistry, CORE, 3, 1st Year
+Engineering Mathematics I, CORE, 4, 1st Year
+LL, AIML, 2, 1st Year"></textarea>
+    </div>
+    <div class="btn-row">
+      <button type="submit" class="btn btn-purple">⬆️ Import Subjects</button>
+      <a href="{{ url_for('subjects') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

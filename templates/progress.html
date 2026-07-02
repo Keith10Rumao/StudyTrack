@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Progress — StudyTrack{% endblock %}
+{% block page_title %}Progress & Analytics{% endblock %}
+{% block page_subtitle %}Visualize your study patterns{% endblock %}
+
+{% block head_extra %}
+<script src="{{ url_for('static', filename='js/chart.umd.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="panel panel-purple">
+  <div class="panel-label">📘 Select Subject to Analyze</div>
+  <form method="GET" action="{{ url_for('progress') }}" onchange="this.submit()">
+    <select name="subject">
+      <option value="all" {{ 'selected' if subject_filter == 'all' }}>📊 All Subjects (Overview)</option>
+      {% for s in all_subjects %}
+      <option value="{{ s.id }}" {{ 'selected' if subject_filter == s.id|string }}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+    <input type="hidden" name="dept" value="{{ dept_filter }}">
+    <input type="hidden" name="period" value="{{ period }}">
+  </form>
+</div>
+
+<div class="panel panel-yellow">
+  <div class="panel-label">🔻 Additional Filters</div>
+  <form method="GET" action="{{ url_for('progress') }}" onchange="this.submit()">
+    <input type="hidden" name="subject" value="{{ subject_filter }}">
+    <div class="field-grid">
+      <div class="field">
+        <label>Course / Department</label>
+        <select name="dept">
+          <option value="all" {{ 'selected' if dept_filter == 'all' }}>All Departments</option>
+          {% for d in departments %}
+          <option value="{{ d }}" {{ 'selected' if dept_filter == d }}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Time Period</label>
+        <select name="period">
+          <option value="7" {{ 'selected' if period == '7' }}>Last 7 Days</option>
+          <option value="30" {{ 'selected' if period == '30' }}>Last 30 Days</option>
+          <option value="all" {{ 'selected' if period == 'all' }}>All Time</option>
+        </select>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-box sb-yellow">
+    <div class="label">📈 Total Hours</div>
+    <div class="value">{{ total_hours }}</div>
+  </div>
+  <div class="stat-box sb-pink">
+    <div class="label">🔥 Study Streak</div>
+    <div class="value">{{ streak }}</div>
+    <div class="sub">days</div>
+  </div>
+  <div class="stat-box sb-green">
+    <div class="label">✅ Completion</div>
+    <div class="value">{{ completion_pct }}%</div>
+    <div class="sub">assignments</div>
+  </div>
+  <div class="stat-box sb-blue">
+    <div class="label">🎯 Avg/Day</div>
+    <div class="value">{{ avg_per_day }}</div>
+    <div class="sub">minutes</div>
+  </div>
+</div>
+
+<div class="chart-box">
+  <div class="panel-label">Daily Study Time Trend</div>
+  <canvas id="trendChart" height="100"></canvas>
+</div>
+
+<div class="chart-box">
+  <div class="panel-label">Subject Time Allocation</div>
+  {% if allocation_list %}
+    <canvas id="allocationChart" height="{{ (allocation_list|length * 38) + 30 }}"></canvas>
+  {% else %}
+    <div class="empty-state">
+      <div class="small">No study sessions logged in this period yet</div>
+    </div>
+  {% endif %}
+</div>
+
+<div class="chart-box">
+  <div class="panel-label">📈 Subject Progress (Assignment Completion)</div>
+  {% if subject_progress_list %}
+    <canvas id="subjectProgressChart" height="{{ (subject_progress_list|length * 38) + 30 }}"></canvas>
+  {% else %}
+    <div class="empty-state">
+      <div class="small">Add some assignments to a subject to see its completion progress here</div>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  renderTrendChart('trendChart', {{ trend_labels|tojson }}, {{ trend_values|tojson }});
+
+  renderColoredBarChart(
+    'allocationChart',
+    {{ allocation_list|map(attribute='name')|list|tojson }},
+    {{ allocation_list|map(attribute='hours')|list|tojson }},
+    {{ allocation_list|map(attribute='hex')|list|tojson }},
+    { label: 'Hours', suffix: ' hrs' }
+  );
+
+  renderColoredBarChart(
+    'subjectProgressChart',
+    {{ subject_progress_list|map(attribute='name')|list|tojson }},
+    {{ subject_progress_list|map(attribute='pct')|list|tojson }},
+    {{ subject_progress_list|map(attribute='hex')|list|tojson }},
+    { label: 'Completion', suffix: '%', max: 100 }
+  );
+</script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Subjects — StudyTrack{% endblock %}
+{% block page_title %}Your Subjects{% endblock %}
+{% block page_subtitle %}Manage your courses{% endblock %}
+{% block top_actions %}
+<a href="{{ url_for('bulk_import_subjects') }}" class="btn btn-purple">⬆️ Bulk Import</a>
+<a href="{{ url_for('new_subject') }}" class="btn btn-blue">➕ Add Subject</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="uni-level-tag">🎓 Uni Level</div>
+
+<div class="year-tabs">
+  <a href="{{ url_for('subjects', year='All') }}" class="year-tab y0 {{ 'active' if year_filter == 'All' }}">All</a>
+  {% for y in year_levels %}
+  <a href="{{ url_for('subjects', year=y) }}" class="year-tab y{{ loop.index }} {{ 'active' if year_filter == y }}">{{ y }}</a>
+  {% endfor %}
+</div>
+
+{% if grouped %}
+  {% for category, items in grouped.items() %}
+    <div class="category-label">{{ category }}</div>
+    <div class="subject-grid">
+      {% for s in items %}
+      <div class="subject-card c-{{ color_map[category] }}">
+        <div>
+          <div class="tag">{{ s.category }}</div>
+          <div class="name">{{ s.name }}</div>
+          {% if s.credits %}<div class="credits">{{ s.credits }} Credit{{ 's' if s.credits != 1 }}</div>{% endif %}
+          {% if s.notes %}
+          <a href="{{ url_for('edit_subject', item_id=s.id) }}" class="notes-chip">📎 {{ s.notes|length }} note{{ 's' if s.notes|length != 1 }}</a>
+          {% endif %}
+        </div>
+        <div class="row-actions">
+          <a href="{{ url_for('edit_subject', item_id=s.id) }}" class="btn btn-outline btn-sm" style="flex:1; justify-content:center;">Edit</a>
+          <form method="POST" action="{{ url_for('delete_subject', item_id=s.id) }}" onsubmit="return confirmDelete('Delete this subject? Its assignments and sessions will be removed too.')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-red btn-sm" style="flex:1; justify-content:center;">Delete</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="list-panel">
+    <div class="empty-state">
+      <div class="big">No Subjects Yet</div>
+      <div class="small">Add your first subject or bulk import your course list</div>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ form_title }} — StudyTrack{% endblock %}
+{% block page_title %}{{ form_title }}{% endblock %}
+{% block page_subtitle %}One subject at a time{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <form method="POST" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="auth-field field">
+      <label>Subject Name</label>
+      <input type="text" name="name" placeholder="e.g. Engineering Mathematics I" value="{{ subject.name if subject else '' }}" required>
+    </div>
+
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>Category / Department Tag</label>
+        <input type="text" name="category" placeholder="e.g. CORE, AIML" value="{{ subject.category if subject else '' }}">
+      </div>
+      <div class="field">
+        <label>Credits</label>
+        <input type="number" name="credits" min="0" max="20" value="{{ subject.credits if subject else 0 }}">
+      </div>
+    </div>
+
+    <div class="auth-field field">
+      <label>Year Level</label>
+      <select name="year_level">
+        {% for y in year_levels %}
+        <option value="{{ y }}" {{ 'selected' if subject and subject.year_level == y }}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="auth-field field">
+      <label>📎 Add Notes (PDF, Word, PowerPoint, images)</label>
+      <input type="file" name="notes" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg">
+      <div class="gmail-hint">You can select multiple files at once. Max 20MB per upload.</div>
+    </div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn btn-blue">💾 Save Subject</button>
+      <a href="{{ url_for('subjects') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+
+  {% if subject %}
+  <div class="section-heading" style="margin-top:28px;">Attached Notes</div>
+  {% if subject.notes %}
+  <div class="list-panel">
+    {% for note in subject.notes %}
+    <div class="list-row">
+      <div class="meta">
+        <div class="title">📄 {{ note.original_filename }}</div>
+        <div class="sub">{{ note.file_size|filesize }} • Uploaded {{ note.uploaded_at.strftime('%b %d, %Y') }}</div>
+      </div>
+      <div class="btn-row">
+        <a href="{{ url_for('download_subject_note', item_id=subject.id, note_id=note.id) }}" class="btn btn-outline btn-sm">⬇️ Download</a>
+        <form method="POST" action="{{ url_for('delete_subject_note', item_id=subject.id, note_id=note.id) }}" onsubmit="return confirmDelete('Delete this file?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-red btn-sm">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="list-panel">
+    <div class="empty-state">
+      <div class="small">No notes attached yet — use the field above to add some.</div>
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ form_title }} — StudyTrack{% endblock %}
+{% block page_title %}{{ form_title }}{% endblock %}
+{% block page_subtitle %}Keep your coursework organized{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <form method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="auth-field field">
+      <label>Title</label>
+      <input type="text" name="title" placeholder="e.g. Engineering Mechanics Assignment 3" value="{{ assignment.title if assignment else '' }}" required>
+    </div>
+
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>Subject</label>
+        <select name="subject_id" required>
+          {% for s in subjects %}
+          <option value="{{ s.id }}" {{ 'selected' if assignment and assignment.subject_id == s.id }}>{{ s.name }} ({{ s.category }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Due Date</label>
+        <input type="date" name="due_date" value="{{ assignment.due_date.isoformat() if assignment else '' }}" required>
+      </div>
+    </div>
+
+    <div class="field-grid auth-field">
+      <div class="field">
+        <label>Priority</label>
+        <select name="priority">
+          {% for p in priorities %}
+          <option value="{{ p }}" {{ 'selected' if assignment and assignment.priority == p }}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select name="status">
+          <option value="Pending" {{ 'selected' if assignment and assignment.status == 'Pending' }}>Pending</option>
+          <option value="Completed" {{ 'selected' if assignment and assignment.status == 'Completed' }}>Completed</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn btn-yellow">💾 Save Assignment</button>
+      <a href="{{ url_for('assignments') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

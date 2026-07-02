@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — StudyTrack{% endblock %}
+{% block page_title %}Your Dashboard{% endblock %}
+{% block page_subtitle %}Single source of truth{% endblock %}
+
+{% block content %}
+
+<div class="panel panel-purple">
+  <div class="panel-label">🔻 Filter By Department</div>
+  <form method="GET" action="{{ url_for('dashboard') }}" onchange="this.submit()">
+    <select name="dept">
+      <option value="all" {{ 'selected' if current_dept == 'all' }}>🏷️ All Departments</option>
+      {% for d in departments %}
+      <option value="{{ d }}" {{ 'selected' if current_dept == d }}>{{ d }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="panel panel-green" style="display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+  <div style="display:flex; align-items:center; gap:14px;">
+    <div style="width:48px;height:48px;background:#111;color:#fff;border:3px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">⏱️</div>
+    <div>
+      <div class="panel-label" style="margin-bottom:2px;">Study Time Today</div>
+      <div style="font-size:2rem; font-weight:800;">{{ today_time_str }}</div>
+    </div>
+  </div>
+  <a href="{{ url_for('study_timer') }}" class="btn btn-dark">Start Session</a>
+</div>
+
+<div class="top-row" style="margin-bottom:10px;">
+  <h3 style="margin:0; font-weight:800; font-size:1.1rem; text-transform:uppercase;">{{ deadlines|length }} Most Urgent Deadline{{ 's' if deadlines|length != 1 }}</h3>
+  <a href="{{ url_for('assignments') }}" class="btn btn-pink btn-sm">View All →</a>
+</div>
+
+<div class="list-panel" style="margin-bottom:24px;">
+  {% if deadlines %}
+    {% for a in deadlines %}
+    <div class="list-row">
+      <div class="meta">
+        <div class="title">{{ a.title }}</div>
+        <div class="sub">{{ a.subject.name }} • Due {{ a.due_date.strftime('%b %d, %Y') }}</div>
+      </div>
+      <span class="badge {{ 'badge-red' if a.priority == 'High' else ('badge-yellow' if a.priority == 'Medium' else 'badge-green') }}">{{ a.priority }}</span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <div class="big">✅ All Caught Up!</div>
+      <div class="small">No pending assignments</div>
+    </div>
+  {% endif %}
+</div>
+
+<div class="stat-grid">
+  <div class="stat-box sb-blue">
+    <div class="label">📘 Subjects</div>
+    <div class="value">{{ subjects_count }}</div>
+    <div class="sub">All subjects</div>
+  </div>
+  <div class="stat-box sb-pink">
+    <div class="label">⚠️ Pending</div>
+    <div class="value">{{ pending_count }}</div>
+    <div class="sub">To complete</div>
+  </div>
+  <div class="stat-box sb-purple">
+    <div class="label">🕒 Total Hours</div>
+    <div class="value">{{ total_hours }}</div>
+    <div class="sub">Study time logged</div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyTrack — Know Exactly Where Your Time Goes</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>📚</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap');
+
+:root {
+  --c-yellow: #FFC940;
+  --c-pink: #FF5FA2;
+  --c-blue: #4D96FF;
+  --c-green: #3DDC84;
+  --c-purple: #B084F5;
+  --c-orange: #FF9F43;
+  --c-red: #FF5C5C;
+
+  --radius: 6px;
+  --border-w: 3px;
+  --font: 'Poppins', 'Segoe UI', Arial, sans-serif;
+
+  --bg: #0b0b0b;
+  --bg-panel: #1c1c1c;
+  --text: #ffffff;
+  --text-dim: #b9b9b9;
+  --border: #000000;
+  --shadow: rgba(255, 255, 255, 0.12);
+  --input-bg: #0b0b0b;
+
+  --bg-dot: rgba(255, 255, 255, 0.11);
+  --glow-1: rgba(255, 95, 162, 0.26);
+  --glow-2: rgba(77, 150, 255, 0.24);
+  --glow-3: rgba(176, 132, 245, 0.22);
+  --glow-4: rgba(255, 201, 64, 0.18);
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle 600px at 10% 6%, var(--glow-1), transparent 72%),
+    radial-gradient(circle 640px at 92% 14%, var(--glow-2), transparent 72%),
+    radial-gradient(circle 580px at 16% 70%, var(--glow-3), transparent 72%),
+    radial-gradient(circle 620px at 88% 92%, var(--glow-4), transparent 72%),
+    radial-gradient(var(--bg-dot) 1.5px, transparent 1.5px);
+  background-size: auto, auto, auto, auto, 26px 26px;
+  background-attachment: fixed, fixed, fixed, fixed, fixed;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+}
+
+@media (max-width: 640px) {
+  body {
+    background-attachment: scroll, scroll, scroll, scroll, scroll;
+  }
+}
+
+a { color: inherit; text-decoration: none; }
+
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 22px;
+}
+
+/* ---------------- reveal-on-scroll ---------------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------------- Top nav ---------------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(11,11,11,0.88);
+  backdrop-filter: blur(6px);
+  border-bottom: var(--border-w) solid var(--border);
+}
+.topbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand .icon {
+  width: 38px; height: 38px;
+  background: var(--c-yellow);
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.15rem;
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+.brand .word {
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.topbar nav {
+  display: flex;
+  gap: 26px;
+  align-items: center;
+}
+.topbar nav a.navlink {
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  transition: color 0.15s ease;
+}
+.topbar nav a.navlink:hover { color: var(--text); }
+
+/* ---------------- Buttons (brutalist chunky) ---------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 0.84rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #111;
+  background: var(--c-yellow);
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--shadow);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  white-space: nowrap;
+}
+.btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--shadow); }
+.btn:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--shadow); }
+
+.btn-orange { background: var(--c-orange); }
+.btn-pink { background: var(--c-pink); color: #fff; }
+.btn-blue { background: var(--c-blue); color: #fff; }
+.btn-green { background: var(--c-green); }
+.btn-purple { background: var(--c-purple); color: #fff; }
+.btn-outline { background: var(--bg-panel); color: var(--text); }
+.btn-lg { padding: 16px 28px; font-size: 0.95rem; }
+.btn-row { display: flex; gap: 14px; flex-wrap: wrap; }
+
+/* ---------------- Hero ---------------- */
+
+.hero {
+  padding: 90px 0 70px;
+  position: relative;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 50px;
+  align-items: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--c-green);
+  color: #111;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 3px 3px 0 var(--shadow);
+  margin-bottom: 22px;
+}
+.eyebrow .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #111;
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+.hero h1 {
+  font-size: 3.4rem;
+  font-weight: 800;
+  line-height: 1.07;
+  letter-spacing: 0.2px;
+  margin: 0 0 22px;
+  text-transform: uppercase;
+}
+.hero h1 .hl {
+  background: var(--c-pink);
+  color: #fff;
+  padding: 0 10px;
+  display: inline-block;
+  box-shadow: 4px 4px 0 var(--shadow);
+  border: var(--border-w) solid var(--border);
+  border-radius: 4px;
+  transform: rotate(-1.5deg);
+}
+
+.hero p.lead {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  max-width: 480px;
+  line-height: 1.6;
+  margin: 0 0 32px;
+}
+
+.hero-note {
+  margin-top: 18px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* hero mock dashboard card */
+.hero-visual {
+  position: relative;
+}
+
+.mock-card {
+  background: var(--bg-panel);
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 9px 9px 0 var(--shadow);
+  padding: 20px;
+  transform: rotate(1.2deg);
+  animation: float 5s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: rotate(1.2deg) translateY(0); }
+  50% { transform: rotate(1.2deg) translateY(-8px); }
+}
+
+.mock-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.mock-top .title { font-weight: 800; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.mock-pulse {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--c-green); color: #111;
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.5px;
+  padding: 5px 9px; border: 2px solid var(--border); border-radius: 5px;
+  text-transform: uppercase;
+}
+.mock-pulse .blip { width: 6px; height: 6px; border-radius: 50%; background: #111; animation: blink 1s infinite; }
+
+.mock-stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.mock-stat {
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  color: #111;
+}
+.mock-stat .num { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+.mock-stat .lbl { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; opacity: 0.85; margin-top: 4px; }
+.ms-blue { background: var(--c-blue); color: #fff; }
+.ms-orange { background: var(--c-orange); }
+
+.mock-bar-track {
+  height: 16px;
+  background: var(--input-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.mock-bar-fill {
+  height: 100%;
+  background: var(--c-blue);
+  width: 0%;
+  border-radius: 8px;
+  transition: width 1.4s cubic-bezier(.2,.8,.2,1);
+}
+.mock-bar-fill.in { width: 68%; }
+
+.mock-rows { display: flex; flex-direction: column; gap: 8px; }
+.mock-row {
+  display: flex; justify-content: space-between; align-items: center;
+  border: 2px solid var(--border);
+  border-radius: 5px;
+  padding: 8px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.mock-chip {
+  font-size: 0.6rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; border: 1.5px solid var(--border); color: #111;
+}
+.chip-yellow { background: var(--c-yellow); }
+.chip-green { background: var(--c-green); }
+.chip-red { background: var(--c-red); color: #fff; }
+
+/* floating badge decorations */
+.float-badge {
+  position: absolute;
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 4px 4px 0 var(--shadow);
+  padding: 8px 12px;
+  font-weight: 800;
+  font-size: 0.78rem;
+  display: flex; align-items: center; gap: 6px;
+  animation: bob 4s ease-in-out infinite;
+}
+.fb1 { top: -22px; right: 30px; background: var(--c-purple); color: #fff; animation-delay: 0.3s; }
+.fb2 { bottom: -18px; left: -22px; background: var(--c-yellow); animation-delay: 1.1s; }
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+
+/* ---------------- Section heading ---------------- */
+
+.section { padding: 80px 0; }
+.section-tag {
+  display: inline-block;
+  background: #111;
+  border: 2px solid var(--border);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 5px;
+  margin-bottom: 14px;
+}
+.section h2 {
+  font-size: 2.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+  letter-spacing: 0.3px;
+}
+.section .sub {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  max-width: 560px;
+  line-height: 1.6;
+  margin-bottom: 46px;
+}
+
+/* ---------------- Feature grid ---------------- */
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.feature-card {
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 5px 5px 0 var(--shadow);
+  padding: 22px 20px;
+  color: #111;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.feature-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 8px 8px 0 var(--shadow);
+}
+.feature-card .ic {
+  width: 46px; height: 46px;
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(0,0,0,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  margin-bottom: 14px;
+}
+.feature-card h3 {
+  font-weight: 800;
+  font-size: 1.05rem;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+.feature-card p {
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.55;
+  margin: 0;
+  opacity: 0.85;
+}
+
+.fc-yellow { background: var(--c-yellow); }
+.fc-blue { background: var(--c-blue); color: #fff; }
+.fc-green { background: var(--c-green); }
+.fc-pink { background: var(--c-pink); color: #fff; }
+.fc-purple { background: var(--c-purple); color: #fff; }
+.fc-orange { background: var(--c-orange); }
+.feature-card.fc-blue p, .feature-card.fc-pink p, .feature-card.fc-purple p { opacity: 0.92; }
+
+/* ---------------- How it works ---------------- */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+.step-card {
+  background: var(--bg-panel);
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 5px 5px 0 var(--shadow);
+  padding: 20px 18px;
+  position: relative;
+}
+.step-num {
+  font-weight: 800;
+  font-size: 2.2rem;
+  line-height: 1;
+  -webkit-text-stroke: 2px var(--border);
+  color: transparent;
+  margin-bottom: 10px;
+}
+.step-card h4 {
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+.step-card p {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ---------------- Streak / badge showcase ---------------- */
+
+.showcase {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.streak-box {
+  background: var(--c-orange);
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--shadow);
+  padding: 26px;
+  color: #111;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.streak-box .num { font-size: 3.4rem; font-weight: 800; line-height: 1; }
+.streak-box .lbl { font-weight: 800; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; }
+.streak-box .longest { font-size: 0.78rem; font-weight: 600; opacity: 0.8; margin-top: 2px; }
+.flame { font-size: 2.4rem; animation: flicker 1.8s ease-in-out infinite; }
+@keyframes flicker {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.12) rotate(-3deg); }
+}
+
+.badge-shelf {
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--shadow);
+  background: var(--bg-panel);
+  padding: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.badge-item {
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 8px;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 800;
+  transition: transform 0.15s ease;
+}
+.badge-item:hover { transform: scale(1.06) rotate(-2deg); }
+.badge-item .ic { font-size: 1.6rem; margin-bottom: 6px; }
+.badge-item.b0 { background: var(--c-yellow); color: #111; }
+.badge-item.b1 { background: var(--c-blue); color: #fff; }
+.badge-item.b2 { background: var(--c-purple); color: #fff; }
+.badge-item.b3 { background: var(--c-green); color: #111; }
+.badge-item.b4 { background: var(--c-pink); color: #fff; }
+.badge-item.b5 { background: var(--c-orange); color: #111; }
+
+/* ---------------- Stats strip ---------------- */
+
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.stat-pill {
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 5px 5px 0 var(--shadow);
+  padding: 22px 16px;
+  text-align: center;
+  color: #111;
+}
+.stat-pill .big { font-size: 2.1rem; font-weight: 800; line-height: 1; }
+.stat-pill .lbl { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 6px; opacity: 0.85; }
+.sp1 { background: var(--c-blue); color: #fff; }
+.sp2 { background: var(--c-green); }
+.sp3 { background: var(--c-pink); color: #fff; }
+.sp4 { background: var(--c-purple); color: #fff; }
+
+/* ---------------- Final CTA ---------------- */
+
+.cta-panel {
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 9px 9px 0 var(--shadow);
+  background: var(--c-yellow);
+  color: #111;
+  padding: 56px 50px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cta-panel h2 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin: 0 0 14px;
+}
+.cta-panel p {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 28px;
+  opacity: 0.85;
+}
+.cta-panel .btn-row { justify-content: center; }
+
+/* ---------------- Footer ---------------- */
+
+footer.app-footer {
+  text-align: center;
+  padding: 40px 0 30px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-weight: 600;
+  border-top: var(--border-w) solid var(--border);
+  margin-top: 40px;
+}
+footer.app-footer .fbrand { font-weight: 800; color: var(--text); }
+
+/* ---------------- Responsive ---------------- */
+
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 2.4rem; }
+  .feature-grid { grid-template-columns: repeat(2, 1fr); }
+  .steps { grid-template-columns: repeat(2, 1fr); }
+  .showcase { grid-template-columns: 1fr; }
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+  .topbar nav .navlink { display: none; }
+}
+
+@media (max-width: 560px) {
+  .feature-grid { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; }
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+  .cta-panel { padding: 40px 24px; }
+  .hero { padding: 60px 0 50px; }
+  .hero h1 { font-size: 1.9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, .mock-card, .float-badge, .flame, .eyebrow .dot, .mock-pulse .blip {
+    animation: none !important;
+    transition: none !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="icon">📚</div>
+      <div class="word">StudyTrack</div>
+    </div>
+    <nav>
+      <a class="navlink" href="#features">Features</a>
+      <a class="navlink" href="#how">How It Works</a>
+      <a class="navlink" href="#progress">Progress</a>
+      <a class="navlink" href="{{ url_for('login') }}">Sign In</a>
+      <a class="btn btn-yellow btn-sm-nav" href="{{ url_for('signup') }}" style="padding:9px 16px; font-size:0.78rem;">Get Started</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow"><span class="dot"></span> Built for students who like proof, not vibes</div>
+        <h1>Know exactly<br>where your <span class="hl">time</span><br>actually goes.</h1>
+        <p class="lead">StudyTrack turns vague "I studied today" into hard numbers — hours per subject, streaks, GPA progress, and deadlines that don't sneak up on you. No spreadsheets. No guessing.</p>
+        <div class="btn-row">
+          <a href="{{ url_for('signup') }}" class="btn btn-yellow btn-lg">🔓 Get Started Free</a>
+          <a href="#features" class="btn btn-outline btn-lg">See How It Works</a>
+        </div>
+        <div class="hero-note">✅ No credit card &nbsp; • &nbsp; ✅ Set up in under 2 minutes</div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="float-badge fb1">🔥 12-Day Streak</div>
+        <div class="mock-card">
+          <div class="mock-top">
+            <div class="title">📊 Dashboard</div>
+            <div class="mock-pulse"><span class="blip"></span> Live Timer</div>
+          </div>
+          <div class="mock-stat-row">
+            <div class="mock-stat ms-blue"><div class="num">42.5h</div><div class="lbl">This Month</div></div>
+            <div class="mock-stat ms-orange"><div class="num">8.2</div><div class="lbl">Current GPA</div></div>
+          </div>
+          <div class="mock-bar-track"><div class="mock-bar-fill" id="heroBar"></div></div>
+          <div class="mock-rows">
+            <div class="mock-row"><span>Data Structures Quiz</span><span class="mock-chip chip-red">High</span></div>
+            <div class="mock-row"><span>Physics Lab Report</span><span class="mock-chip chip-yellow">Medium</span></div>
+            <div class="mock-row"><span>Reading Response</span><span class="mock-chip chip-green">Done</span></div>
+          </div>
+        </div>
+        <div class="float-badge fb2">🏆 Badge Unlocked</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="reveal">
+      <div class="section-tag">What You Get</div>
+      <h2>Every part of studying, in one place</h2>
+      <p class="sub">StudyTrack isn't just a timer. It's the full loop — plan it, log it, see it, improve it.</p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card fc-yellow reveal">
+        <div class="ic">⏱️</div>
+        <h3>Live Study Timer</h3>
+        <p>Hit start when you sit down, stop when you're done. Sessions log themselves — no manual math, no forgetting.</p>
+      </div>
+      <div class="feature-card fc-pink reveal">
+        <div class="ic">📋</div>
+        <h3>Assignment Tracker</h3>
+        <p>Every deadline, priority-tagged and calendar-mapped, so nothing important gets buried under nothing important.</p>
+      </div>
+      <div class="feature-card fc-blue reveal">
+        <div class="ic">📘</div>
+        <h3>Subject Organizer</h3>
+        <p>Group everything by subject and year — credits, notes, files, and session history, all filed where it belongs.</p>
+      </div>
+      <div class="feature-card fc-green reveal">
+        <div class="ic">🔥</div>
+        <h3>Streaks &amp; Badges</h3>
+        <p>Consecutive study days build a streak. Hit milestones, unlock badges. Momentum becomes visible, not just felt.</p>
+      </div>
+      <div class="feature-card fc-purple reveal">
+        <div class="ic">📈</div>
+        <h3>Progress Charts</h3>
+        <p>See exactly how your hours split across subjects week over week — so you can rebalance before exam season, not during it.</p>
+      </div>
+      <div class="feature-card fc-orange reveal">
+        <div class="ic">🎯</div>
+        <h3>GPA &amp; Goals</h3>
+        <p>Set a target GPA and a weekly study-hour goal. Watch your own progress bar move every time you put in the work.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how">
+    <div class="reveal">
+      <div class="section-tag">The Loop</div>
+      <h2>How StudyTrack works</h2>
+      <p class="sub">Four steps, repeated all semester. That's the whole system.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step-card reveal">
+        <div class="step-num">01</div>
+        <h4>Add Your Subjects</h4>
+        <p>Set up each course with credits and year level — takes under a minute.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-num">02</div>
+        <h4>Start the Timer</h4>
+        <p>Open a subject, hit start, study. StudyTrack handles the clock.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-num">03</div>
+        <h4>Log Assignments</h4>
+        <p>Drop in due dates and priority so deadlines show up before they're urgent.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-num">04</div>
+        <h4>Watch It Add Up</h4>
+        <p>Streaks, badges, and charts update automatically — proof of the work you put in.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRESS / STREAK SHOWCASE -->
+  <section class="section" id="progress">
+    <div class="reveal">
+      <div class="section-tag">Stay Accountable</div>
+      <h2>Momentum you can actually see</h2>
+      <p class="sub">A missed day feels different when there's a streak on the line — and a badge shelf that's only half full.</p>
+    </div>
+
+    <div class="showcase">
+      <div class="streak-box reveal">
+        <div class="flame">🔥</div>
+        <div>
+          <div class="num">12</div>
+          <div class="lbl">Day Streak</div>
+          <div class="longest">Longest streak: 23 days</div>
+        </div>
+      </div>
+
+      <div class="badge-shelf reveal">
+        <div class="badge-item b0"><div class="ic">🌱</div>First Session</div>
+        <div class="badge-item b1"><div class="ic">📅</div>7-Day Streak</div>
+        <div class="badge-item b2"><div class="ic">💯</div>100 Hours</div>
+        <div class="badge-item b3"><div class="ic">🌙</div>Night Owl</div>
+        <div class="badge-item b4"><div class="ic">⚡</div>30-Day Streak</div>
+        <div class="badge-item b5"><div class="ic">🎯</div>Goal Crusher</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS STRIP -->
+  <section class="section">
+    <div class="stats-strip">
+      <div class="stat-pill sp1 reveal"><div class="big" data-count="20">0</div><div class="lbl">MB Free Storage</div></div>
+      <div class="stat-pill sp2 reveal"><div class="big" data-count="6">0</div><div class="lbl">Subject Color Tags</div></div>
+      <div class="stat-pill sp3 reveal"><div class="big" data-count="2">0</div><div class="lbl">Min Setup Time</div></div>
+      <div class="stat-pill sp4 reveal"><div class="big">∞</div><div class="lbl">Study Sessions Logged</div></div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="section" id="cta">
+    <div class="cta-panel reveal">
+      <h2>Stop guessing. Start tracking.</h2>
+      <p>Free to use. Dark mode included. Your data, exportable any time.</p>
+      <div class="btn-row">
+        <a href="{{ url_for('signup') }}" class="btn btn-dark btn-lg" style="background:#111; color:#fff;">📚 Create Free Account</a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg" style="background:#fff; color:#111;">🔓 I Already Have an Account</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="app-footer">
+    <span class="fbrand">StudyTrack</span> — built for students who like to know exactly where their time goes.
+  </footer>
+
+</div>
+
+<script>
+// Reveal-on-scroll
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+revealEls.forEach(el => io.observe(el));
+
+// Hero progress bar fill once visible
+setTimeout(() => {
+  const bar = document.getElementById('heroBar');
+  if (bar) bar.classList.add('in');
+}, 500);
+
+// Count-up stats
+const counters = document.querySelectorAll('[data-count]');
+const cio = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const el = e.target;
+      const target = parseInt(el.getAttribute('data-count'), 10);
+      let cur = 0;
+      const step = Math.max(1, Math.ceil(target / 30));
+      const tick = () => {
+        cur += step;
+        if (cur >= target) { el.textContent = target; return; }
+        el.textContent = cur;
+        requestAnimationFrame(tick);
+      };
+      tick();
+      cio.unobserve(el);
+    }
+  });
+}, { threshold: 0.4 });
+counters.forEach(el => cio.observe(el));
+</script>
+
+</body>
+</html>

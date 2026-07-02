@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Calendar — StudyTrack{% endblock %}
+{% block page_title %}Deadline Calendar{% endblock %}
+{% block page_subtitle %}See your assignments laid out by date{% endblock %}
+{% block top_actions %}
+<a href="{{ url_for('assignments') }}" class="btn btn-pink">📋 List View</a>
+<a href="{{ url_for('new_assignment') }}" class="btn btn-yellow">➕ New Assignment</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="calendar-header">
+  <a href="{{ url_for('assignments_calendar', year=prev_year, month=prev_month) }}" class="btn btn-outline btn-sm">← Prev</a>
+  <div class="calendar-title">{{ month_label }}</div>
+  <a href="{{ url_for('assignments_calendar', year=next_year, month=next_month) }}" class="btn btn-outline btn-sm">Next →</a>
+</div>
+
+<div class="calendar-grid">
+  {% for dow in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+  <div class="calendar-dow">{{ dow }}</div>
+  {% endfor %}
+
+  {% for week in month_days %}
+    {% for day in week %}
+    <div class="calendar-day {{ 'outside-month' if day.month != month }} {{ 'is-today' if day == today }}">
+      <div class="day-num">{{ day.day }}</div>
+      {% for a in assignments_by_date.get(day, [])[:4] %}
+      <a href="{{ url_for('edit_assignment', item_id=a.id) }}" class="cal-chip {{ 'done' if a.status == 'Completed' else a.priority|lower }}" title="{{ a.title }} ({{ a.subject.name }})">{{ a.title }}</a>
+      {% endfor %}
+      {% if assignments_by_date.get(day, [])|length > 4 %}
+      <div style="font-size:0.6rem; font-weight:700; color:var(--text-dim);">+{{ assignments_by_date.get(day)|length - 4 }} more</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% endfor %}
+</div>
+
+<div class="btn-row" style="margin-top:18px;">
+  <span class="cal-chip high" style="position:static;">High</span>
+  <span class="cal-chip medium" style="position:static;">Medium</span>
+  <span class="cal-chip low" style="position:static;">Low</span>
+  <span class="cal-chip done" style="position:static;">Completed</span>
+</div>
+
+{% endblock %}

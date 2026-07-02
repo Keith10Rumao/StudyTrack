@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up — StudyTrack</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <a href="{{ url_for('landing') }}" class="auth-logo" style="text-decoration:none;">
+        <div class="icon">📚</div>
+        <div class="word">STUDYTRACK</div>
+      </a>
+      <p class="auth-tagline">Create your account</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-list">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('signup') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="auth-field field">
+          <label>Full Name</label>
+          <input type="text" name="name" placeholder="Aryan Sharma" required>
+        </div>
+        <div class="auth-field field">
+          <label>Gmail Address</label>
+          <input type="email" name="email" placeholder="you@gmail.com" required>
+          <div class="gmail-hint">Only Gmail addresses (@gmail.com) can be used to sign up.</div>
+        </div>
+        <div class="field-grid auth-field">
+          <div class="field">
+            <label>Password</label>
+            <input type="password" name="password" placeholder="••••••••" required minlength="6">
+          </div>
+          <div class="field">
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" placeholder="••••••••" required minlength="6">
+          </div>
+        </div>
+        <div class="field-grid auth-field">
+          <div class="field">
+            <label>Year Level</label>
+            <select name="year_level">
+              {% for y in year_levels %}
+              <option value="{{ y }}">{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label>Branch / Major</label>
+            <input type="text" name="branch" placeholder="AI &amp; Machine Learning">
+          </div>
+        </div>
+        <div class="auth-field field">
+          <label>University / College</label>
+          <input type="text" name="university" placeholder="Mumbai University of Engineering">
+        </div>
+
+        <div class="panel panel-yellow" style="margin: 4px 0 16px; padding: 14px 16px;">
+          <div class="panel-label" style="margin-bottom:8px;">🔐 Account Recovery</div>
+          <div class="auth-field field" style="margin-bottom:10px;">
+            <label>Security Question</label>
+            <input type="text" name="security_question" placeholder="e.g. What's the name of your first pet?" required>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>Answer</label>
+            <input type="text" name="security_answer" placeholder="Your answer" required>
+          </div>
+          <div class="gmail-hint" style="color:#5a4500;">No real email is sent by this app — this question is how you'll reset your password if you forget it.</div>
+        </div>
+
+        <button type="submit" class="btn btn-green btn-block">✨ Create Account</button>
+      </form>
+
+      <div class="auth-switch">
+        Already have an account? <a href="{{ url_for('login') }}">Sign In</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

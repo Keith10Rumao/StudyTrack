@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Study Timer — StudyTrack{% endblock %}
+{% block page_title %}Study Session{% endblock %}
+{% block page_subtitle %}
+{% if state == 'running' %}Timer running — go get it{% elif state == 'review' %}Nice work — rate this session{% else %}Pick a subject and hit start{% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if state == 'idle' %}
+<div class="form-card">
+  <form method="POST" action="{{ url_for('start_timer') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="auth-field field">
+      <label>Subject</label>
+      <select name="subject_id" required>
+        {% for s in subjects %}
+        <option value="{{ s.id }}">{{ s.name }} ({{ s.category }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="btn-row">
+      <button type="submit" class="btn btn-green">▶️ Start Timer</button>
+      <a href="{{ url_for('study_history') }}" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+  <div style="margin-top:16px;">
+    <a href="{{ url_for('new_study_session') }}" style="font-size:0.78rem; font-weight:700; text-decoration:underline; color:var(--text-dim);">or log a past session manually →</a>
+  </div>
+</div>
+
+{% elif state == 'running' %}
+<div class="panel panel-green" style="text-align:center; padding:36px 20px;">
+  <div class="panel-label" style="justify-content:center;">📘 {{ active_subject.name }}</div>
+  <div id="liveClock" style="font-size:3.4rem; font-weight:800; letter-spacing:2px; font-family:'Poppins',monospace; margin:10px 0 18px;">00:00:00</div>
+  <form method="POST" action="{{ url_for('stop_timer') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-dark" style="font-size:1rem; padding:14px 30px;">⏹️ Stop Session</button>
+  </form>
+</div>
+<p style="text-align:center; font-size:0.78rem; color:var(--text-dim); font-weight:600;">
+  Feel free to navigate to other pages — your timer keeps running in the background and you'll see it up top.
+</p>
+
+{% elif state == 'review' %}
+<div class="form-card">
+  <div class="panel panel-yellow" style="margin-bottom:18px;">
+    <div class="panel-label">📘 {{ active_subject.name }}</div>
+    <div style="font-size:1.8rem; font-weight:800;">{{ (elapsed_seconds // 3600) }}h {{ (elapsed_seconds % 3600) // 60 }}m {{ elapsed_seconds % 60 }}s</div>
+    <div style="font-size:0.78rem; font-weight:600; opacity:0.8;">Total time tracked</div>
+  </div>
+
+  <form method="POST" action="{{ url_for('finalize_timer') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="auth-field field">
+      <label>How effective was this session? (1 - 5)</label>
+      <select name="effectiveness">
+        <option value="1">1 — Distracted</option>
+        <option value="2">2 — So-so</option>
+        <option value="3" selected>3 — Decent</option>
+        <option value="4">4 — Focused</option>
+        <option value="5">5 — Deep work</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button type="submit" class="btn btn-green">💾 Save Session</button>
+    </div>
+  </form>
+
+  <form method="POST" action="{{ url_for('discard_timer') }}" style="margin-top:10px;" onsubmit="return confirmDelete('Discard this session? The time tracked will not be saved.')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-red btn-sm">🗑️ Discard Instead</button>
+  </form>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if state == 'running' %}
+<script>
+  startLiveClock('liveClock', {{ started_at_iso|tojson }});
+</script>
+{% endif %}
+{% endblock %}
